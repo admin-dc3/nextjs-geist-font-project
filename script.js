@@ -2,32 +2,84 @@
 let clipboardHistory = [];
 let currentFilter = 'all';
 
-// DOM Elements
-const textInput = document.getElementById('textInput');
-const imageInput = document.getElementById("imageInput");
-const preview = document.getElementById('preview');
-const savedContent = document.getElementById('savedContent');
-const filterSelect = document.getElementById('filterType');
-const charCount = document.querySelector('.char-count');
-
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
 function initializeApp() {
+    // Lấy các phần tử DOM sau khi DOM đã sẵn sàng
+    const textInput = document.getElementById('textInput');
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const savedContent = document.getElementById('savedContent');
+    const filterSelect = document.getElementById('filterType');
+    const charCount = document.querySelector('.char-count');
+
     // Character count for textarea
-    textInput.addEventListener('input', updateCharCount);
-    
+    textInput.addEventListener('input', function() {
+        updateCharCount(textInput, charCount);
+        // Auto-save draft
+        clearTimeout(window.autoSaveTimer);
+        window.autoSaveTimer = setTimeout(() => {
+            const text = textInput.value.trim();
+            if (text) {
+                localStorage.setItem('clipboard_draft', text);
+            }
+        }, 2000);
+    });
+
     // Filter change handler
     filterSelect.addEventListener('change', function() {
         currentFilter = this.value;
         filterSavedContent();
     });
-    
+
+    // Form handling
+    document.getElementById("saveForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const text = formData.get('text').trim();
+        const image = formData.get('image');
+        if (!text && !image) {
+            showToast('Vui lòng nhập nội dung hoặc lấy từ clipboard!', 'warning');
+            return;
+        }
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        submitBtn.disabled = true;
+        fetch("save.php", { method: "POST", body: formData })
+        .then((res) => {
+            if (res.ok) {
+                showToast("✅ Ghi chú đã được lưu thành công!", 'success');
+                loadSaved();
+                this.reset();
+                preview.innerHTML = "";
+                updateCharCount(textInput, charCount);
+            } else {
+                throw new Error('Network response was not ok');
+            }
+        })
+        .catch((error) => {
+            console.error('Save error:', error);
+            showToast("❌ Lỗi khi lưu ghi chú. Vui lòng thử lại!", 'error');
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+
+    // Load draft on page load
+    const draft = localStorage.getItem('clipboard_draft');
+    if (draft && !textInput.value) {
+        textInput.value = draft;
+        updateCharCount(textInput, charCount);
+    }
+
     // Load saved content
     loadSaved();
-    
     // Initialize clipboard permission
     requestClipboardPermission();
 }
@@ -48,13 +100,11 @@ async function getClipboard() {
     const preview = document.getElementById("preview");
     const textInput = document.getElementById("textInput");
     const imageInput = document.getElementById("imageInput");
-
     try {
         const items = await navigator.clipboard.read();
         let found = false;
         let hasText = false;
         let hasImage = false;
-
         for (const item of items) {
             if (item.types.includes('image/png') || item.types.includes('image/jpeg') || item.types.includes('image/gif')) {
                 const imageType = item.types.find(type => type.startsWith('image/'));
@@ -78,13 +128,10 @@ async function getClipboard() {
             } else if (item.types.includes('text/plain')) {
                 const blob = await item.getType('text/plain');
                 const text = await blob.text();
-                
-                // Check if content already exists
                 if (textInput.value.trim() === text.trim()) {
                     showToast('Nội dung này đã có trong ô nhập liệu!', 'warning');
                     return;
                 }
-                
                 textInput.value = text;
                 preview.innerHTML = `
                     <div class="preview-item">
@@ -99,9 +146,9 @@ async function getClipboard() {
                 hasText = true;
             }
         }
-
         if (found) {
-            updateCharCount();
+            const charCount = document.querySelector('.char-count');
+            updateCharCount(textInput, charCount);
             showToast(`Đã lấy ${hasText ? 'văn bản' : ''}${hasText && hasImage ? ' và ' : ''}${hasImage ? 'hình ảnh' : ''} từ clipboard!`, 'success');
         } else {
             showToast('Clipboard không chứa văn bản hoặc hình ảnh hỗ trợ', 'warning');
@@ -112,55 +159,9 @@ async function getClipboard() {
     }
 }
 
-// Form handling
-document.getElementById("saveForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    
-    // Validate input
-    const text = formData.get('text').trim();
-    const image = formData.get('image');
-    
-    if (!text && !image) {
-        showToast('Vui lòng nhập nội dung hoặc lấy từ clipboard!', 'warning');
-        return;
-    }
-    
-    // Show loading state
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
-    submitBtn.disabled = true;
-    
-    fetch("save.php", { 
-        method: "POST", 
-        body: formData 
-    })
-    .then((res) => {
-        if (res.ok) {
-            showToast("✅ Ghi chú đã được lưu thành công!", 'success');
-            loadSaved();
-            this.reset();
-            document.getElementById("preview").innerHTML = "";
-            updateCharCount();
-        } else {
-            throw new Error('Network response was not ok');
-        }
-    })
-    .catch((error) => {
-        console.error('Save error:', error);
-        showToast("❌ Lỗi khi lưu ghi chú. Vui lòng thử lại!", 'error');
-    })
-    .finally(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    });
-});
-
 // Delete entry
 function deleteEntry(filename) {
     if (!confirm("Bạn có chắc muốn xóa ghi chú này?")) return;
-    
     fetch("delete.php?file=" + encodeURIComponent(filename))
     .then((res) => {
         if (res.ok) {
@@ -183,7 +184,6 @@ async function copyToClipboard(content, type) {
             await navigator.clipboard.writeText(content);
             showToast("📋 Đã sao chép văn bản vào clipboard!", 'success');
         } else if (type === 'image') {
-            // For images, we need to convert base64 to blob
             const response = await fetch(content);
             const blob = await response.blob();
             await navigator.clipboard.write([
@@ -201,8 +201,8 @@ async function copyToClipboard(content, type) {
 
 // Load saved content
 function loadSaved() {
+    const savedContent = document.getElementById('savedContent');
     savedContent.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
-    
     fetch("view.php")
     .then((res) => res.text())
     .then((html) => {
@@ -233,12 +233,10 @@ function loadSaved() {
 
 // Initialize saved items with event listeners
 function initializeSavedItems() {
-    // Add expand/collapse functionality
     document.querySelectorAll('.expand-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const content = this.previousElementSibling;
             const isExpanded = content.classList.contains('expanded');
-            
             if (isExpanded) {
                 content.classList.remove('expanded');
                 this.textContent = 'Xem thêm';
@@ -248,14 +246,11 @@ function initializeSavedItems() {
             }
         });
     });
-    
-    // Add copy functionality
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const item = this.closest('.saved-item');
             const content = item.querySelector('.saved-item-content');
             const type = item.dataset.type;
-            
             if (type === 'text' || type === 'mixed') {
                 const textElement = content.querySelector('p');
                 if (textElement) {
@@ -275,21 +270,19 @@ function initializeSavedItems() {
 // Filter saved content
 function filterSavedContent() {
     const items = document.querySelectorAll('.saved-item');
-    
+    let visibleCount = 0;
     items.forEach(item => {
         const type = item.dataset.type;
         const shouldShow = currentFilter === 'all' || type === currentFilter;
-        
         if (shouldShow) {
             item.style.display = 'block';
+            visibleCount++;
         } else {
             item.style.display = 'none';
         }
     });
-    
-    // Show empty state if no items match filter
-    const visibleItems = document.querySelectorAll('.saved-item[style="display: block"]');
-    if (visibleItems.length === 0 && currentFilter !== 'all') {
+    const savedContent = document.getElementById('savedContent');
+    if (visibleCount === 0 && currentFilter !== 'all') {
         savedContent.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-filter"></i>
@@ -304,22 +297,17 @@ function filterSavedContent() {
 function openModal(content, type) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modalBody');
-    
     if (type === 'text') {
         modalBody.innerHTML = `<p style="white-space: pre-wrap;">${content}</p>`;
     } else if (type === 'image') {
         modalBody.innerHTML = `<img src="${content}" alt="Full size image" style="max-width: 100%; height: auto;" />`;
     }
-    
     modal.classList.add('show');
 }
-
 function closeModal() {
     const modal = document.getElementById('modal');
     modal.classList.remove('show');
 }
-
-// Close modal when clicking outside
 document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeModal();
@@ -327,11 +315,9 @@ document.getElementById('modal').addEventListener('click', function(e) {
 });
 
 // Utility functions
-function updateCharCount() {
+function updateCharCount(textInput, charCount) {
     const count = textInput.value.length;
     charCount.textContent = `${count} ký tự`;
-    
-    // Change color based on length
     if (count > 1000) {
         charCount.style.color = '#dc3545';
     } else if (count > 500) {
@@ -340,7 +326,6 @@ function updateCharCount() {
         charCount.style.color = '#6c757d';
     }
 }
-
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -348,55 +333,26 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
-
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.className = `toast ${type}`;
     toast.classList.add('show');
-    
     setTimeout(() => {
         toast.classList.remove('show');
     }, 4000);
 }
-
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
-    // Ctrl+V to paste
     if (e.ctrlKey && e.key === 'v') {
         e.preventDefault();
         getClipboard();
     }
-    
-    // Ctrl+S to save
     if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
         document.getElementById('saveForm').dispatchEvent(new Event('submit'));
     }
-    
-    // Escape to close modal
     if (e.key === 'Escape') {
         closeModal();
-    }
-});
-
-// Auto-save draft (optional feature)
-let autoSaveTimer;
-textInput.addEventListener('input', function() {
-    clearTimeout(autoSaveTimer);
-    autoSaveTimer = setTimeout(() => {
-        const text = this.value.trim();
-        if (text) {
-            localStorage.setItem('clipboard_draft', text);
-        }
-    }, 2000);
-});
-
-// Load draft on page load
-window.addEventListener('load', function() {
-    const draft = localStorage.getItem('clipboard_draft');
-    if (draft && !textInput.value) {
-        textInput.value = draft;
-        updateCharCount();
     }
 });
