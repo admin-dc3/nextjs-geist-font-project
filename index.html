@@ -12,7 +12,25 @@
     <header class="header">
       <h1><i class="fas fa-clipboard"></i> Clipboard Manager</h1>
       <p class="subtitle">Quản lý và lưu trữ nội dung clipboard một cách thông minh</p>
+      <button id="adminLogoutBtn" class="btn btn-secondary" style="display:none; float:right; margin-top:10px;">Đăng xuất admin</button>
     </header>
+
+    <!-- Admin Login Form -->
+    <div id="adminLoginBox" class="admin-login-box" style="display:none;">
+      <form id="adminLoginForm" class="form" autocomplete="off">
+        <h2>Đăng nhập quản trị</h2>
+        <div class="form-group">
+          <label for="adminUser">Tài khoản</label>
+          <input type="text" id="adminUser" name="adminUser" required autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="adminPass">Mật khẩu</label>
+          <input type="password" id="adminPass" name="adminPass" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary">Đăng nhập</button>
+        <div id="adminLoginMsg" class="message"></div>
+      </form>
+    </div>
 
     <main class="main-content">
       <!-- Input Section -->

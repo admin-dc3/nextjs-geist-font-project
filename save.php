@@ -1,4 +1,5 @@
 <?php
+session_start();
 $dataDir = "storage/";
 if (!is_dir($dataDir)) mkdir($dataDir);
 

@@ -1,4 +1,5 @@
 <?php
+session_start();
 $dir = "storage/";
 if (!is_dir($dir)) {
     echo '<div class="empty-state">
@@ -10,6 +11,7 @@ if (!is_dir($dir)) {
 }
 
 $files = array_diff(scandir($dir, SCANDIR_SORT_DESCENDING), ['.', '..']);
+$is_admin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true;
 
 if (empty($files)) {
     echo '<div class="empty-state">
@@ -22,6 +24,10 @@ if (empty($files)) {
         if (pathinfo($file, PATHINFO_EXTENSION) === 'html') {
             $content = file_get_contents($dir . $file);
             if ($content) {
+                if (!$is_admin) {
+                    // Ẩn nút Xóa nếu không phải admin
+                    $content = preg_replace('/<button[^>]*btn-danger[^>]*>.*?<\/button>/si', '', $content);
+                }
                 echo $content;
             }
         }

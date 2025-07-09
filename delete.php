@@ -1,5 +1,13 @@
 <?php
+session_start();
 header('Content-Type: application/json');
+
+// Chỉ cho phép admin
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Bạn không có quyền xóa.']);
+    exit;
+}
 
 $file = $_GET['file'] ?? '';
 $path = "storage/" . basename($file);
@@ -25,7 +33,6 @@ if (unlink($path)) {
     if (file_exists($imagePath)) {
         unlink($imagePath);
     }
-    
     echo json_encode(['success' => true, 'message' => 'File deleted successfully']);
 } else {
     http_response_code(500);

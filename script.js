@@ -1,6 +1,7 @@
 // Global variables
 let clipboardHistory = [];
 let currentFilter = 'all';
+let isAdmin = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -82,6 +83,71 @@ function initializeApp() {
     loadSaved();
     // Initialize clipboard permission
     requestClipboardPermission();
+}
+
+// Kiểm tra trạng thái admin khi load trang
+function checkAdminStatus() {
+    fetch('session_status.php')
+        .then(res => res.json())
+        .then(data => {
+            isAdmin = data.is_admin;
+            toggleAdminUI();
+        });
+}
+
+function toggleAdminUI() {
+    const adminLoginBox = document.getElementById('adminLoginBox');
+    const logoutBtn = document.getElementById('adminLogoutBtn');
+    if (isAdmin) {
+        adminLoginBox.style.display = 'none';
+        document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'inline-flex');
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+    } else {
+        adminLoginBox.style.display = 'block';
+        document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'none');
+        if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+}
+
+// Đăng xuất admin
+if (document.getElementById('adminLogoutBtn')) {
+    document.getElementById('adminLogoutBtn').addEventListener('click', function() {
+        fetch('logout.php').then(() => {
+            isAdmin = false;
+            toggleAdminUI();
+            showToast('Đã đăng xuất admin!', 'success');
+            loadSaved();
+        });
+    });
+}
+
+// Gửi form đăng nhập admin
+if (document.getElementById('adminLoginForm')) {
+    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const user = document.getElementById('adminUser').value.trim();
+        const pass = document.getElementById('adminPass').value;
+        fetch('login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, pass })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                isAdmin = true;
+                toggleAdminUI();
+                showToast('Đăng nhập admin thành công!', 'success');
+                document.getElementById('adminLoginMsg').textContent = '';
+                loadSaved();
+            } else {
+                document.getElementById('adminLoginMsg').textContent = data.message || 'Sai tài khoản hoặc mật khẩu!';
+            }
+        })
+        .catch(() => {
+            document.getElementById('adminLoginMsg').textContent = 'Lỗi kết nối máy chủ!';
+        });
+    });
 }
 
 // Clipboard Functions
@@ -218,6 +284,7 @@ function loadSaved() {
                 </div>
             `;
         }
+        checkAdminStatus();
     })
     .catch((error) => {
         console.error('Load error:', error);
@@ -228,6 +295,7 @@ function loadSaved() {
                 <p>Không thể tải danh sách ghi chú. Vui lòng thử lại!</p>
             </div>
         `;
+        checkAdminStatus();
     });
 }
 
