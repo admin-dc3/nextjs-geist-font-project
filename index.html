@@ -3,29 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lưu Clipboard</title>
+  <title>Clipboard Manager - Trình quản lý Clipboard</title>
   <link rel="stylesheet" href="style.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>📋 Trình lưu Clipboard</h1>
-    <p>Dán (Ctrl+V) hoặc nhấn nút để lấy văn bản / hình ảnh từ clipboard:</p>
+    <header class="header">
+      <h1><i class="fas fa-clipboard"></i> Clipboard Manager</h1>
+      <p class="subtitle">Quản lý và lưu trữ nội dung clipboard một cách thông minh</p>
+    </header>
 
-    <button class="btn" onclick="getClipboard()">📥 Lấy từ Clipboard</button>
+    <main class="main-content">
+      <!-- Input Section -->
+      <section class="input-section">
+        <div class="input-header">
+          <h2><i class="fas fa-edit"></i> Tạo ghi chú mới</h2>
+          <button class="btn btn-primary" onclick="getClipboard()">
+            <i class="fas fa-download"></i> Lấy Clipboard
+          </button>
+        </div>
+        
+        <div id="preview" class="preview-container"></div>
+        
+        <form id="saveForm" class="form">
+          <div class="textarea-wrapper">
+            <textarea 
+              name="text" 
+              id="textInput" 
+              placeholder="Nhập nội dung ghi chú hoặc sử dụng nút 'Lấy Clipboard' để lấy nội dung từ clipboard..."
+              rows="6"
+            ></textarea>
+            <div class="textarea-footer">
+              <span class="char-count">0 ký tự</span>
+            </div>
+          </div>
+          <input type="hidden" name="image" id="imageInput"/>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save"></i> Lưu ghi chú
+          </button>
+        </form>
+      </section>
 
-    <div id="preview" class="preview"></div>
+      <!-- Saved Content Section -->
+      <section class="saved-section">
+        <div class="section-header">
+          <h2><i class="fas fa-folder-open"></i> Ghi chú đã lưu</h2>
+          <div class="filter-controls">
+            <select id="filterType" class="filter-select">
+              <option value="all">Tất cả</option>
+              <option value="text">Chỉ văn bản</option>
+              <option value="image">Chỉ hình ảnh</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="savedContent" class="saved-content">
+          <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
-    <form id="saveForm" class="form">
-      <textarea name="text" id="textInput" placeholder="Nội dung văn bản..." rows="5"></textarea>
-      <input type="hidden" name="image" id="imageInput"/>
-      <button type="submit" class="btn save-btn">💾 Lưu</button>
-    </form>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
 
-    <div id="message" class="message"></div>
-
-    <hr>
-    <h2>📂 Nội dung đã lưu</h2>
-    <div id="savedContent" class="saved-content"></div>
+  <!-- Modal for full content view -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Xem chi tiết</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
   </div>
 
   <script src="script.js"></script>
