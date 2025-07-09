@@ -349,15 +349,22 @@ function filterSavedContent() {
             item.style.display = 'none';
         }
     });
-    const savedContent = document.getElementById('savedContent');
+    // Chỉ hiện empty-state nếu KHÔNG có .saved-item nào phù hợp, nhưng KHÔNG thay đổi innerHTML
+    let emptyState = document.getElementById('filterEmptyState');
     if (visibleCount === 0 && currentFilter !== 'all') {
-        savedContent.innerHTML = `
-            <div class="empty-state">
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'filterEmptyState';
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
                 <i class="fas fa-filter"></i>
                 <h3>Không có ghi chú ${currentFilter === 'text' ? 'văn bản' : 'hình ảnh'}</h3>
                 <p>Thử thay đổi bộ lọc hoặc tạo ghi chú mới!</p>
-            </div>
-        `;
+            `;
+            document.getElementById('savedContent').appendChild(emptyState);
+        }
+    } else if (emptyState) {
+        emptyState.remove();
     }
 }
 
