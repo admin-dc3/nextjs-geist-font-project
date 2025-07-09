@@ -14,10 +14,18 @@ $hasImage = !empty($image);
 $contentType = $hasText && $hasImage ? 'mixed' : ($hasText ? 'text' : 'image');
 
 // Create modern HTML structure
-$content = "<div class='saved-item' data-type='$contentType'>";
+$content = "<div class='saved-item' data-type='$contentType'";
+if ($contentType === 'mixed') {
+    $content .= " data-type-text='1' data-type-image='1'";
+} elseif ($contentType === 'text') {
+    $content .= " data-type-text='1'";
+} elseif ($contentType === 'image') {
+    $content .= " data-type-image='1'";
+}
+$content .= ">";
 $content .= "<div class='saved-item-header'>";
 $content .= "<div class='saved-item-meta'>";
-$content .= "<span class='saved-item-type " . ($contentType === 'text' ? 'text' : 'image') . "'>";
+$content .= "<span class='saved-item-type " . ($contentType === 'text' ? 'text' : ($contentType === 'image' ? 'image' : 'mixed')) . "'>";
 $content .= $contentType === 'text' ? 'Văn bản' : ($contentType === 'image' ? 'Hình ảnh' : 'Hỗn hợp');
 $content .= "</span>";
 $content .= "<span class='saved-item-date'>" . date('d/m/Y H:i', $timestamp) . "</span>";

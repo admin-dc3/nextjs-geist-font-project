@@ -96,16 +96,19 @@ function checkAdminStatus() {
 }
 
 function toggleAdminUI() {
-    const adminLoginBox = document.getElementById('adminLoginBox');
+    const adminLoginOverlay = document.getElementById('adminLoginOverlay');
     const logoutBtn = document.getElementById('adminLogoutBtn');
+    const mainContent = document.querySelector('.main-content');
     if (isAdmin) {
-        adminLoginBox.style.display = 'none';
+        if (adminLoginOverlay) adminLoginOverlay.style.display = 'none';
         document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'inline-flex');
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (mainContent) mainContent.style.filter = '';
     } else {
-        adminLoginBox.style.display = 'block';
+        if (adminLoginOverlay) adminLoginOverlay.style.display = 'flex';
         document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'none');
         if (logoutBtn) logoutBtn.style.display = 'none';
+        if (mainContent) mainContent.style.filter = 'blur(2px)';
     }
 }
 
@@ -341,7 +344,15 @@ function filterSavedContent() {
     let visibleCount = 0;
     items.forEach(item => {
         const type = item.dataset.type;
-        const shouldShow = currentFilter === 'all' || type === currentFilter;
+        // Nếu filter là text, hiển thị cả text và mixed; nếu image, hiển thị cả image và mixed
+        let shouldShow = false;
+        if (currentFilter === 'all') {
+            shouldShow = true;
+        } else if (currentFilter === 'text') {
+            shouldShow = (type === 'text' || type === 'mixed');
+        } else if (currentFilter === 'image') {
+            shouldShow = (type === 'image' || type === 'mixed');
+        }
         if (shouldShow) {
             item.style.display = 'block';
             visibleCount++;
