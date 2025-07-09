@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lưu Clipboard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 Trình lưu Clipboard</h1>
+    <p>Dán (Ctrl+V) hoặc nhấn nút để lấy văn bản / hình ảnh từ clipboard:</p>
+
+    <button class="btn" onclick="getClipboard()">📥 Lấy từ Clipboard</button>
+
+    <div id="preview" class="preview"></div>
+
+    <form id="saveForm" class="form">
+      <textarea name="text" id="textInput" placeholder="Nội dung văn bản..." rows="5"></textarea>
+      <input type="hidden" name="image" id="imageInput"/>
+      <button type="submit" class="btn save-btn">💾 Lưu</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <hr>
+    <h2>📂 Nội dung đã lưu</h2>
+    <div id="savedContent" class="saved-content"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
