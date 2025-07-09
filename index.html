@@ -15,24 +15,7 @@
       <button id="adminLogoutBtn" class="btn btn-secondary" style="display:none; float:right; margin-top:10px;">Đăng xuất admin</button>
     </header>
 
-    <!-- Admin Login Overlay: luôn nổi giữa màn hình khi chưa đăng nhập -->
-    <div id="adminLoginOverlay" class="admin-login-overlay" style="display:none;">
-      <div id="adminLoginBox" class="admin-login-box">
-        <form id="adminLoginForm" class="form" autocomplete="off">
-          <h2>Đăng nhập quản trị</h2>
-          <div class="form-group">
-            <label for="adminUser">Tài khoản</label>
-            <input type="text" id="adminUser" name="adminUser" required autocomplete="username" />
-          </div>
-          <div class="form-group">
-            <label for="adminPass">Mật khẩu</label>
-            <input type="password" id="adminPass" name="adminPass" required autocomplete="current-password" />
-          </div>
-          <button type="submit" class="btn btn-primary">Đăng nhập</button>
-          <div id="adminLoginMsg" class="message"></div>
-        </form>
-      </div>
-    </div>
+    <!-- Xóa overlay đăng nhập admin, chỉ giữ lại các phần khác -->
 
     <main class="main-content">
       <!-- Input Section -->

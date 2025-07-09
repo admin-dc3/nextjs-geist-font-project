@@ -96,19 +96,13 @@ function checkAdminStatus() {
 }
 
 function toggleAdminUI() {
-    const adminLoginOverlay = document.getElementById('adminLoginOverlay');
     const logoutBtn = document.getElementById('adminLogoutBtn');
-    const mainContent = document.querySelector('.main-content');
     if (isAdmin) {
-        if (adminLoginOverlay) adminLoginOverlay.style.display = 'none';
         document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'inline-flex');
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
-        if (mainContent) mainContent.style.filter = '';
     } else {
-        if (adminLoginOverlay) adminLoginOverlay.style.display = 'flex';
         document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'none');
         if (logoutBtn) logoutBtn.style.display = 'none';
-        if (mainContent) mainContent.style.filter = 'blur(2px)';
     }
 }
 
