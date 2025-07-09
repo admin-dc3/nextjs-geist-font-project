@@ -95,30 +95,30 @@ function checkAdminStatus() {
         });
 }
 
-function toggleAdminUI() {
-    const logoutBtn = document.getElementById('adminLogoutBtn');
-    if (isAdmin) {
-        document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'inline-flex');
-        if (logoutBtn) logoutBtn.style.display = 'inline-block';
-    } else {
-        document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'none');
-        if (logoutBtn) logoutBtn.style.display = 'none';
-    }
+// Hiển thị popup đăng nhập admin
+const loginBtn = document.getElementById('adminLoginBtn');
+const logoutBtn = document.getElementById('adminLogoutBtn');
+const loginPopup = document.getElementById('adminLoginPopup');
+if (loginBtn && loginPopup) {
+    loginBtn.onclick = () => { loginPopup.style.display = 'flex'; };
 }
-
-// Đăng xuất admin
-if (document.getElementById('adminLogoutBtn')) {
-    document.getElementById('adminLogoutBtn').addEventListener('click', function() {
+if (logoutBtn) {
+    logoutBtn.onclick = () => {
         fetch('logout.php').then(() => {
             isAdmin = false;
             toggleAdminUI();
             showToast('Đã đăng xuất admin!', 'success');
             loadSaved();
         });
+    };
+}
+// Đóng popup khi click ra ngoài
+if (loginPopup) {
+    loginPopup.addEventListener('click', function(e) {
+        if (e.target === loginPopup) loginPopup.style.display = 'none';
     });
 }
-
-// Gửi form đăng nhập admin
+// Sau khi đăng nhập thành công thì ẩn popup, chuyển nút sang Đăng xuất
 if (document.getElementById('adminLoginForm')) {
     document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -137,6 +137,7 @@ if (document.getElementById('adminLoginForm')) {
                 showToast('Đăng nhập admin thành công!', 'success');
                 document.getElementById('adminLoginMsg').textContent = '';
                 loadSaved();
+                if (loginPopup) loginPopup.style.display = 'none';
             } else {
                 document.getElementById('adminLoginMsg').textContent = data.message || 'Sai tài khoản hoặc mật khẩu!';
             }
@@ -145,6 +146,18 @@ if (document.getElementById('adminLoginForm')) {
             document.getElementById('adminLoginMsg').textContent = 'Lỗi kết nối máy chủ!';
         });
     });
+}
+// Cập nhật toggleAdminUI để chuyển đổi nút đăng nhập/đăng xuất
+function toggleAdminUI() {
+    if (isAdmin) {
+        document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'inline-flex');
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+    } else {
+        document.querySelectorAll('.btn-danger').forEach(btn => btn.style.display = 'none');
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+    }
 }
 
 // Clipboard Functions
